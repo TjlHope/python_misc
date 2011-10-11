@@ -7,6 +7,7 @@
 import sys
 import time
 import codecs
+import re
 
 import urllib2
 import logging
@@ -18,10 +19,15 @@ def timestamp():
     """
     return time.strftime("%Y-%m-%d %H:%M:%S")
 
-def key(k):
-    """ Strips spacing chars to give a nice dict key str.
+delchars = ''.join(c for c in map(chr, xrange(256)) if not c.isalnum())
+def key(k, *args):
+    """ Strips spacing chars to give a nice dict key str. Any extra arguments 
+        given are also removed from the string
     """
-    return str(k).lower().translate(None, '+-_ .&\\\x00')
+    k = str(k).lower()
+    for arg in args:
+        k = k.replace(arg, '')
+    return k.translate(None, delchars)
 
 def ls(iterable):
     """ Nicely display an iterable as a string, in brackets only if there are 
@@ -97,3 +103,10 @@ def retry_urlopen(url, attempts=50, *args, **kwargs):
     log.error("Retried {0} times with no valid response.".format(attempts))
     raise urllib2.URLError("Open retried {0} times!".format(attempts))
             
+html_tag_re = re.compile('<.*?>')
+def strip_html(data):
+    return html_tag_re.sub('', data)
+
+if __name__ == '__main__':
+    sys.stderr.write("This module is to be imported, do not use directly.")
+    sys.exit(1)

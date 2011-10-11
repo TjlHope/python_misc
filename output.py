@@ -6,9 +6,6 @@ import os
 import logging
 #import csv
 
-from htmlgen import HTMLgen
-import xlwt
-
 from wrappers import retry_open, ls
 import unicode_csv as csv
 
@@ -62,41 +59,48 @@ class OutputCsv(OutputBase):
                 self.csv.writerow(row._fields)
         self.csv.writerow(row)
 
-class OutputXl(OutputBase):
+try:
+    import xlwt
+    class OutputXl(OutputBase):
+        pass
+except ImportError:
     pass
 
-class OutputHtml(OutputBase):
-    def __init__(self, *args, **kwargs):
-        super(self.__class__, self).__init__(*args, **kwargs)
-        if '.htm' in self.name:
-            self.file_name = self.name
-            self.name = self.name.partition('.htm')[0]
-        else:
-            self.file_name = '.'.join((self.name, 'html'))
-        self.open(mode='wb')
-        
-    def open(self, title=None, *args, **kwargs):
-        super(self.__class__, self).open(*args, **kwargs)
-        if title == None:
-            title = self.name
-        self.html = HTMLgen.SimpleDocument(title=title)
-        self.table = HTMLgen.Table(tabletitle=title)
-        self.table.body = []
-        self.html.append(self.table)
-        return self.file
-        
-    def writerow(self, row):
-        if not self.table.heading:
-            if hasattr(row, '_fields'):
-                self.table.heading = row._fields
-        self.table.body.append(list(row))
-        
-    def close(self, fl= None, *args, **kwargs):
-        if fl == None:
-            fl = self.file
-        fl.write(str(self.html))
-        super(self.__class__, self).close(fl, *args, **kwargs)
-
+try:
+    from htmlgen import HTMLgen
+    class OutputHtml(OutputBase):
+        def __init__(self, *args, **kwargs):
+            super(self.__class__, self).__init__(*args, **kwargs)
+            if '.htm' in self.name:
+                self.file_name = self.name
+                self.name = self.name.partition('.htm')[0]
+            else:
+                self.file_name = '.'.join((self.name, 'html'))
+            self.open(mode='wb')
+            
+        def open(self, title=None, *args, **kwargs):
+            super(self.__class__, self).open(*args, **kwargs)
+            if title == None:
+                title = self.name
+            self.html = HTMLgen.SimpleDocument(title=title)
+            self.table = HTMLgen.Table(tabletitle=title)
+            self.table.body = []
+            self.html.append(self.table)
+            return self.file
+            
+        def writerow(self, row):
+            if not self.table.heading:
+                if hasattr(row, '_fields'):
+                    self.table.heading = row._fields
+            self.table.body.append(list(row))
+            
+        def close(self, fl= None, *args, **kwargs):
+            if fl == None:
+                fl = self.file
+            fl.write(str(self.html))
+            super(self.__class__, self).close(fl, *args, **kwargs)
+except ImportError:
+    pass
 
 def table(rows, name='output', types=('csv',)):
     log = logging.getLogger(__name__.title())
