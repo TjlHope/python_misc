@@ -102,8 +102,8 @@ def retry_urlopen(url, attempts=50, *args, **kwargs):
             
     log.error("Retried {0} times with no valid response.".format(attempts))
     raise urllib2.URLError("Open retried {0} times!".format(attempts))
-            
-html_tag_re = re.compile('<.*?>')
+
+html_tag_re = re.compile(r'<.*?>')
 def strip_html(data):
     return html_tag_re.sub('', data)
 
