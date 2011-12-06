@@ -1,4 +1,5 @@
-""" Wrappers to nicely output data in different formats
+#!/usr/bin/env python
+""" Wrappers to nicely output data in different formats.
 """
 
 import sys
@@ -49,12 +50,44 @@ def latex2Dof2D(table, row_headers=None, column_headers=None, sep=None,
                 minor_sep=None, header_sep=None):
     """Wrapper around repr2Dof2D() for LaTeX tabular environments."""
     # Some pretty defaults (requires booktabs package.
+    cols = table.shape[1]
+    inner_cols = table[0, 0].shape[1]
+    if header_sep is None:
+        if sep is None:
+            header_sep = ('\t& ', '\t\\\\ \\hline\\hline\n')
+        else:
+            header_sep = sep
+    if minor_sep is None:
+        minor_sep = ('\t& ', '\t\\\\\n') if sep is None else sep
+    if sep is None:
+        sep = ('\t& ', '\t\\\\ \\hline\n')
+    # Make LaTeX tabular header.
+    header = '\\begin{tabular}{'
+    if row_headers:
+        header += 'l||'
+    header += '|'.join([' '.join(['r'] * inner_cols)] * cols)
+    header += '}\n'
+    # Make headers span correct number of cells.
+    r_h = map(lambda r: '\\multirow{%s}{*}{%s}' % (table[0, 0].shape[0], r),
+              row_headers)
+    c_h = map(lambda c: '\\multicolumn{%s}{|c}{%s}' % (table[0, 0].shape[1],
+                                                       c),
+              column_headers)
+    str_repr = repr2Dof2D(table, r_h, c_h, sep, minor_sep, header_sep)
+    footer = '\t\\\\\n\\end{tabular}'
+    return '\n'.join((header, str_repr, footer))
+
+
+def booktabs2Dof2D(table, row_headers=None, column_headers=None, sep=None,
+                   minor_sep=None, header_sep=None):
+    """Wrapper around repr2Dof2D() for LaTeX booktabs tabular environments."""
+    # Some pretty defaults (requires booktabs package.
+    cols = table.shape[1]
+    inner_cols = table[0, 0].shape[1]
     if header_sep is None:
         if sep is None:
             if column_headers:      # Need a pretty header split.
                 # Add the blank square in the top left
-                cols = table.shape[1]
-                inner_cols = table[0, 0].shape[1]
                 inc = (2 if row_headers and len(column_headers) == cols else 1)
                 mid = ' '.join(['\\cmidrule(lr){%s-%s}' %
                                     (i, i + inner_cols - 1)
@@ -73,8 +106,7 @@ def latex2Dof2D(table, row_headers=None, column_headers=None, sep=None,
     header = '\\begin{tabular}{'
     if row_headers:
         header += 'l '
-    header += ' '.join([' '.join(['r'] * table[0, 0].shape[1])] *
-                        table.shape[1])
+    header += ' '.join([' '.join(['r'] * inner_cols)] * cols)
     header += '}\n\\toprule'
     # Make headers span correct number of cells.
     r_h = map(lambda r: '\\multirow{%s}{*}{%s}' % (table[0, 0].shape[0], r),

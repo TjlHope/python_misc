@@ -46,19 +46,21 @@ def ls(iterable):
     """
     iter_strs = [str(i) for i in iterable]
     string = iter_strs[0] if len(iter_strs) is 1 else "', '".join(iter_strs)
-    return string.join(("'", "'"))
+    return string.join("''")
 
 
 delchars = ''.join(c for c in map(chr, xrange(256)) if not c.isalnum())
-def key(k, *args):
-    """ Strips spacing chars to give a nice dict key str. Any extra arguments
-        given are also removed from the string.
+def alnum(k, *args):
+    """ Strips everything but alpha numeric chars to give a nice dict key str.
+        Any extra arguments given are also removed from the string.
     """
     k = str(k).lower()
     for arg in args:
         k = k.replace(arg, '')
     return k.translate(None, delchars)
 
+# Keep compatability
+key = alnum
 
 def unkey(k, key_type=None, sep=' ', case='lower', keywords=[]):
     """ Attempts to reconstruct a str that has been 'key()'ed.
