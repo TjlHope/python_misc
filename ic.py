@@ -9,6 +9,9 @@ import mechanize
 
 Error = mechanize.URLError
 
+def quote(s, safe=':/?='):
+    return mechanize._urllib2_fork.quote(s, safe)
+
 
 class FormRedirectBrowser(mechanize.Browser):
     def __init__(self, **kwds):
@@ -24,7 +27,7 @@ class FormRedirectBrowser(mechanize.Browser):
             host = uri_parts[2]         # '/'.join(uri_parts[:3])
         else:
             host = uri_parts[0]
-        self.log.info("Adding password for user: '{0}', hostname: '{1}'."
+        self.log.debug("Adding password for user: '{0}', hostname: '{1}'."
                         .format(user, host))
         mechanize.Browser.add_password(self, host, user, passwd, **kwds)
 
@@ -35,15 +38,15 @@ class FormRedirectBrowser(mechanize.Browser):
             attempt to prevent scraping.
         """
         try:
-            self.log.info("Browsing to url: '{0}'.".format(url))
+            self.log.debug("Browsing to url: '{0}'.".format(url))
             responce = self.open(url, **kwds)
-            while True:
+            while self.viewing_html():
                 try:
                     if form_name:
                         self.select_form(name=form_name)
                     else:
                         self.select_form(nr=0)
-                    self.log.info("Submitting form '{0}' for redirect."
+                    self.log.debug("Submitting form '{0}' for redirect."
                                     .format(form_name))
                     responce = self.submit()
                 except mechanize.FormNotFoundError:
